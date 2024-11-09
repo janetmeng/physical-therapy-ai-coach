@@ -88,16 +88,25 @@ if __name__ == "__main__":
             r_ankle_x = int(lm.landmark[lmPose.RIGHT_ANKLE].x * w)
             r_ankle_y = int(lm.landmark[lmPose.RIGHT_ANKLE].y * h)
 
-            body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
-            leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
+            # Calculate body alignment and leg mobility based on visible side
+            if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
+                # Calculate for left side if left shoulder is more visible
+                body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
+                leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
+                cv2.putText(image, "Using Left Side", (10, 60), font, 0.7, green, 2)
+
+            else:
+                # Calculate for right side if right shoulder is more visible
+                body_alignment = findAngle(r_shldr_x, r_shldr_y, r_knee_x, r_knee_y)
+                leg_mobility = findAngle(r_knee_x, r_knee_y, r_ankle_x, r_ankle_y)
+                cv2.putText(image, "Using Right Side", (10, 60), font, 0.7, green, 2)
+
+            # Display the angles
+            cv2.putText(image, f"Body Alignment: {int(body_alignment)} degrees", (10, 60), font, 0.9, green, 2)
+            cv2.putText(image, f"Leg Mobility: {int(leg_mobility)} degrees", (10, 90), font, 0.9, blue, 2)
 
             angle_text_string = f'Body alignment : {int(body_alignment)}  Leg mobility : {int(leg_mobility)}'
 
-            # offset = findDistance(l_knee_x, l_knee_x, r_shldr_x, r_shldr_y)
-            # if offset < 100:
-            #     cv2.putText(image, str(int(offset)) + ' Aligned', (w - 150, 30), font, 0.9, green, 2)
-            # else:
-            #     cv2.putText(image, str(int(offset)) + ' Not Aligned', (w - 150, 30), font, 0.9, red, 2)
 
             if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 40:
                 cv2.putText(image, str(int(body_alignment)) + str(int(leg_mobility)) + ' Aligned', (w - 150, 30), font, 0.9, green, 2)

@@ -60,9 +60,6 @@ if run_detection:
             st.warning("Unable to access camera.")
             break
 
-        #flip camera:
-        # image_rotate = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-
         # Convert image for Mediapipe processing
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         keypoints = pose.process(image_rgb)
@@ -88,24 +85,21 @@ if run_detection:
                 l_ankle_y = int(lm.landmark[lmPose.LEFT_ANKLE].y * h)
                 r_ankle_x = int(lm.landmark[lmPose.RIGHT_ANKLE].x * w)
                 r_ankle_y = int(lm.landmark[lmPose.RIGHT_ANKLE].y * h)
-                # l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
-                # l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
-                # r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
-                # r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
-                # l_ear_x = int(lm.landmark[lmPose.LEFT_EAR].x * w)
-                # l_ear_y = int(lm.landmark[lmPose.LEFT_EAR].y * h)
-                # l_hip_x = int(lm.landmark[lmPose.LEFT_HIP].x * w)
-                # l_hip_y = int(lm.landmark[lmPose.LEFT_HIP].y * h)
-
-                # Calculate shoulder alignment
-                #offset = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
 
                 #new:
-                body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
-                leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
+                if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
+                    # Calculate for left side if left shoulder is more visible
+                    body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
+                    leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
+                    cv2.putText(image, "Using Left Side", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+
+                else:
+                    # Calculate for right side if right shoulder is more visible
+                    body_alignment = findAngle(r_shldr_x, r_shldr_y, r_knee_x, r_knee_y)
+                    leg_mobility = findAngle(r_knee_x, r_knee_y, r_ankle_x, r_ankle_y)
+                    cv2.putText(image, "Using Right Side", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
 
 
-                # if offset < 100:
                 if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
                     posture_text = f"Aligned: {int(body_alignment)}" # add leg mobility
                     color = (127, 255, 0)  # green
@@ -113,10 +107,7 @@ if run_detection:
                     posture_text = f"Not Aligned: {int(body_alignment)}" #add leg mobility
                     color = (50, 50, 255)  # red
 
-                # Calculate neck and torso inclination
-                # neck_inclination = findAngle(l_shldr_x, l_shldr_y, l_ear_x, l_ear_y)
-                # torso_inclination = findAngle(l_hip_x, l_hip_y, l_shldr_x, l_shldr_y)
-
+            
                 if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
                     good_frames += 1
                     bad_frames = 0
@@ -142,12 +133,6 @@ if run_detection:
 
                 cv2.line(image, (l_shldr_x, l_shldr_y), (l_knee_x, l_knee_y), color, 4)
                 cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 4)
-                # cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
-                # cv2.circle(image, (l_ear_x, l_ear_y), 7, (0, 255, 255), -1)
-                # cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (255, 0, 255), -1)
-                # cv2.circle(image, (l_hip_x, l_hip_y), 7, (0, 255, 255), -1)
-                # cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), color, 4)
-                # cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), color, 4)
 
             except Exception as e:
                 st.error(f"Error processing keypoints: {e}")
