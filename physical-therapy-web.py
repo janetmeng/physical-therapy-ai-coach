@@ -42,13 +42,26 @@ if run_detection:
 
     # Open video capture with selected camera index
     cap = cv2.VideoCapture(camera_index)
+
+    # Set camera resolution to a more vertical (narrower) aspect ratio
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 480)  # Width smaller (narrower)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)  # Height larger (vertical)
+
     frame_window = st.image([])
+
+    
+
+
+
 
     while cap.isOpened():
         success, image = cap.read()
         if not success:
             st.warning("Unable to access camera.")
             break
+
+        #flip camera:
+        # image_rotate = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
         # Convert image for Mediapipe processing
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -93,7 +106,7 @@ if run_detection:
 
 
                 # if offset < 100:
-                if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 40:
+                if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
                     posture_text = f"Aligned: {int(body_alignment)}" # add leg mobility
                     color = (127, 255, 0)  # green
                 else:
@@ -104,7 +117,7 @@ if run_detection:
                 # neck_inclination = findAngle(l_shldr_x, l_shldr_y, l_ear_x, l_ear_y)
                 # torso_inclination = findAngle(l_hip_x, l_hip_y, l_shldr_x, l_shldr_y)
 
-                if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 40:
+                if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
                     good_frames += 1
                     bad_frames = 0
                     color = (127, 233, 100)  # light green
