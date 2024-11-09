@@ -75,31 +75,37 @@ if __name__ == "__main__":
         
         # Calculate relevant keypoints
         try:
+            l_knee_x = int(lm.landmark[lmPose.LEFT_KNEE].x * w)
+            l_knee_y = int(lm.landmark[lmPose.LEFT_KNEE].y * h)
+            r_knee_x = int(lm.landmark[lmPose.RIGHT_KNEE].x * w)
+            r_knee_y = int(lm.landmark[lmPose.RIGHT_KNEE].y * h)
             l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
             l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
             r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
             r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
-            l_ear_x = int(lm.landmark[lmPose.LEFT_EAR].x * w)
-            l_ear_y = int(lm.landmark[lmPose.LEFT_EAR].y * h)
-            l_hip_x = int(lm.landmark[lmPose.LEFT_HIP].x * w)
-            l_hip_y = int(lm.landmark[lmPose.LEFT_HIP].y * h)
+            l_ankle_x = int(lm.landmark[lmPose.LEFT_ANKLE].x * w)
+            l_ankle_y = int(lm.landmark[lmPose.LEFT_ANKLE].y * h)
+            r_ankle_x = int(lm.landmark[lmPose.RIGHT_ANKLE].x * w)
+            r_ankle_y = int(lm.landmark[lmPose.RIGHT_ANKLE].y * h)
 
-            offset = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
-            if offset < 100:
-                cv2.putText(image, str(int(offset)) + ' Aligned', (w - 150, 30), font, 0.9, green, 2)
-            else:
-                cv2.putText(image, str(int(offset)) + ' Not Aligned', (w - 150, 30), font, 0.9, red, 2)
+            body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
+            leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
 
-            neck_inclination = findAngle(l_shldr_x, l_shldr_y, l_ear_x, l_ear_y)
-            torso_inclination = findAngle(l_hip_x, l_hip_y, l_shldr_x, l_shldr_y)
+            angle_text_string = f'Body alignment : {int(body_alignment)}  Leg mobility : {int(leg_mobility)}'
 
-            angle_text_string = f'Neck : {int(neck_inclination)}  Torso : {int(torso_inclination)}'
+            # offset = findDistance(l_knee_x, l_knee_x, r_shldr_x, r_shldr_y)
+            # if offset < 100:
+            #     cv2.putText(image, str(int(offset)) + ' Aligned', (w - 150, 30), font, 0.9, green, 2)
+            # else:
+            #     cv2.putText(image, str(int(offset)) + ' Not Aligned', (w - 150, 30), font, 0.9, red, 2)
 
-            if neck_inclination < 40 and torso_inclination < 10:
+            if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 40:
+                cv2.putText(image, str(int(body_alignment)) + str(int(leg_mobility)) + ' Aligned', (w - 150, 30), font, 0.9, green, 2)
                 bad_frames = 0
                 good_frames += 1
                 color = light_green
             else:
+                cv2.putText(image, str(int(body_alignment)) + str(int(leg_mobility)) + ' Not Aligned', (w - 150, 30), font, 0.9, red, 2)
                 good_frames = 0
                 bad_frames += 1
                 color = red
@@ -119,11 +125,11 @@ if __name__ == "__main__":
 
             # Draw landmarks and lines on the image
             cv2.circle(image, (l_shldr_x, l_shldr_y), 7, yellow, -1)
-            cv2.circle(image, (l_ear_x, l_ear_y), 7, yellow, -1)
-            cv2.circle(image, (r_shldr_x, r_shldr_y), 7, pink, -1)
-            cv2.circle(image, (l_hip_x, l_hip_y), 7, yellow, -1)
-            cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), color, 4)
-            cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), color, 4)
+            cv2.circle(image, (l_knee_x, l_knee_y), 7, green, -1)
+            cv2.circle(image, (l_ankle_x, l_ankle_y), 7, pink, -1)
+
+            cv2.line(image, (l_shldr_x, l_shldr_y), (l_knee_x, l_knee_y), color, 4)
+            cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 4)
 
         except Exception as e:
             print(f"Error: {e}")

@@ -17,9 +17,21 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 # Streamlit UI
-st.title("Posture Detection with Camera")
+st.title("Ready-Set-Play")
 camera_source = st.sidebar.selectbox("Select Camera Source", ["Default Camera", "External Camera 1"])
 camera_index = 0 if camera_source == "Default Camera" else 1
+
+#streamlit UI checkbox test:
+# Title of the app
+st.title("Which body part would you like to assest?")
+
+selected_option = st.selectbox(
+    "Choose a feature",
+    ["Arm", "Hamstring"]
+)
+
+# Display the selected option
+st.write(f"You selected: {selected_option}")
 
 # Run Detection
 run_detection = st.checkbox("Run Posture Detection")
@@ -51,29 +63,48 @@ if run_detection:
             
             # Extract relevant keypoints
             try:
+                l_knee_x = int(lm.landmark[lmPose.LEFT_KNEE].x * w)
+                l_knee_y = int(lm.landmark[lmPose.LEFT_KNEE].y * h)
+                r_knee_x = int(lm.landmark[lmPose.RIGHT_KNEE].x * w)
+                r_knee_y = int(lm.landmark[lmPose.RIGHT_KNEE].y * h)
                 l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
                 l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
                 r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
                 r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
-                l_ear_x = int(lm.landmark[lmPose.LEFT_EAR].x * w)
-                l_ear_y = int(lm.landmark[lmPose.LEFT_EAR].y * h)
-                l_hip_x = int(lm.landmark[lmPose.LEFT_HIP].x * w)
-                l_hip_y = int(lm.landmark[lmPose.LEFT_HIP].y * h)
+                l_ankle_x = int(lm.landmark[lmPose.LEFT_ANKLE].x * w)
+                l_ankle_y = int(lm.landmark[lmPose.LEFT_ANKLE].y * h)
+                r_ankle_x = int(lm.landmark[lmPose.RIGHT_ANKLE].x * w)
+                r_ankle_y = int(lm.landmark[lmPose.RIGHT_ANKLE].y * h)
+                # l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
+                # l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
+                # r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
+                # r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
+                # l_ear_x = int(lm.landmark[lmPose.LEFT_EAR].x * w)
+                # l_ear_y = int(lm.landmark[lmPose.LEFT_EAR].y * h)
+                # l_hip_x = int(lm.landmark[lmPose.LEFT_HIP].x * w)
+                # l_hip_y = int(lm.landmark[lmPose.LEFT_HIP].y * h)
 
                 # Calculate shoulder alignment
-                offset = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
-                if offset < 100:
-                    posture_text = f"Aligned: {int(offset)}"
+                #offset = findDistance(l_shldr_x, l_shldr_y, r_shldr_x, r_shldr_y)
+
+                #new:
+                body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
+                leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
+
+
+                # if offset < 100:
+                if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 40:
+                    posture_text = f"Aligned: {int(body_alignment)}" # add leg mobility
                     color = (127, 255, 0)  # green
                 else:
-                    posture_text = f"Not Aligned: {int(offset)}"
+                    posture_text = f"Not Aligned: {int(body_alignment)}" #add leg mobility
                     color = (50, 50, 255)  # red
 
                 # Calculate neck and torso inclination
-                neck_inclination = findAngle(l_shldr_x, l_shldr_y, l_ear_x, l_ear_y)
-                torso_inclination = findAngle(l_hip_x, l_hip_y, l_shldr_x, l_shldr_y)
+                # neck_inclination = findAngle(l_shldr_x, l_shldr_y, l_ear_x, l_ear_y)
+                # torso_inclination = findAngle(l_hip_x, l_hip_y, l_shldr_x, l_shldr_y)
 
-                if neck_inclination < 40 and torso_inclination < 10:
+                if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 40:
                     good_frames += 1
                     bad_frames = 0
                     color = (127, 233, 100)  # light green
@@ -88,16 +119,22 @@ if run_detection:
 
                 # Display feedback on the frame
                 cv2.putText(image, posture_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-                cv2.putText(image, f"Neck: {int(neck_inclination)} | Torso: {int(torso_inclination)}", 
+                cv2.putText(image, f"Body Alignment: {int(body_alignment)} | Leg Mobiliity: {int(leg_mobility)}", 
                             (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
                 # Mark key points on the frame
                 cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
-                cv2.circle(image, (l_ear_x, l_ear_y), 7, (0, 255, 255), -1)
-                cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (255, 0, 255), -1)
-                cv2.circle(image, (l_hip_x, l_hip_y), 7, (0, 255, 255), -1)
-                cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), color, 4)
-                cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), color, 4)
+                cv2.circle(image, (l_knee_x, l_knee_y), 7, (0, 255, 0), -1)
+                cv2.circle(image, (l_ankle_x, l_ankle_y), 7, (203, 192, 255), -1)
+
+                cv2.line(image, (l_shldr_x, l_shldr_y), (l_knee_x, l_knee_y), color, 4)
+                cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 4)
+                # cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
+                # cv2.circle(image, (l_ear_x, l_ear_y), 7, (0, 255, 255), -1)
+                # cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (255, 0, 255), -1)
+                # cv2.circle(image, (l_hip_x, l_hip_y), 7, (0, 255, 255), -1)
+                # cv2.line(image, (l_shldr_x, l_shldr_y), (l_ear_x, l_ear_y), color, 4)
+                # cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), color, 4)
 
             except Exception as e:
                 st.error(f"Error processing keypoints: {e}")
