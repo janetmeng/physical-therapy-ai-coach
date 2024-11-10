@@ -59,7 +59,7 @@ st.subheader("Which injury area would you like to assess?")
 
 selected_option = st.selectbox(
     "Choose an exercise",
-    ["Squat", "Quads", "Arm T", "Arm I", "Arm Y"]
+    ["Squat", "Left Quad", "Right Quad", "Left Arm T", "Right Arm T", "Left Arm I", "Right Arm I", "Left Arm Y", "Right Arm Y"]
 )
 
 # Display the selected option
@@ -86,7 +86,7 @@ st.write(f"You selected: {selected_option}")
 #         st.write("You are testing the right hamstring.")
     
 # Run Detection
-run_detection = st.checkbox("Run Posture Detection")
+run_detection = st.checkbox("Run Exercise Detection")
 
 if run_detection:
     good_frames = 0
@@ -120,35 +120,21 @@ if run_detection:
         
         #QUADS
             
-            if selected_option == "Quads":
+            if selected_option == "Left Quad":
                 # Extract relevant keypoints
                 try:
                     l_knee_x = int(lm.landmark[lmPose.LEFT_KNEE].x * w)
                     l_knee_y = int(lm.landmark[lmPose.LEFT_KNEE].y * h)
-                    r_knee_x = int(lm.landmark[lmPose.RIGHT_KNEE].x * w)
-                    r_knee_y = int(lm.landmark[lmPose.RIGHT_KNEE].y * h)
                     l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
                     l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
-                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
-                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
                     l_ankle_x = int(lm.landmark[lmPose.LEFT_ANKLE].x * w)
                     l_ankle_y = int(lm.landmark[lmPose.LEFT_ANKLE].y * h)
-                    r_ankle_x = int(lm.landmark[lmPose.RIGHT_ANKLE].x * w)
-                    r_ankle_y = int(lm.landmark[lmPose.RIGHT_ANKLE].y * h)
-
-                    #new:
                     
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
-                        # Calculate for left side if left shoulder is more visible
-                        body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
-                        leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
-                        cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
-                    else:
-                    # Calculate for right side if right shoulder is more visible
-                        body_alignment = findAngle(r_shldr_x, r_shldr_y, r_knee_x, r_knee_y)
-                        leg_mobility = findAngle(r_knee_x, r_knee_y, r_ankle_x, r_ankle_y)
-                        cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
-
+                    # Calculate for left side if left shoulder is more visible
+                    body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
+                    leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
+                    cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
+                  
                     if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
                         posture_text = f"Aligned: {int(body_alignment)}" 
                         color = (127, 255, 0)  # green
@@ -158,14 +144,16 @@ if run_detection:
                         color = (50, 50, 255)  # red
 
                 
-                    if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
-                        good_frames += 1
-                        bad_frames = 0
-                        color = (127, 233, 100)  # light green
-                    else:
-                        bad_frames += 1
-                        good_frames = 0
-                        color = (50, 50, 255)  # red
+                    # if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
+                    #     good_frames += 1
+                    #     bad_frames = 0
+                    #     color = (127, 233, 100)  # light green
+                    # else:
+                    #     bad_frames += 1
+                    #     good_frames = 0
+                    #     color = (50, 50, 255)  # red
+
+
 
                     # if check == True:
                     #     correct_tracker += 1
@@ -182,23 +170,71 @@ if run_detection:
                     cv2.putText(image, f"Body Alignment: {int(body_alignment)} | Leg Mobiliity: {int(leg_mobility)}", 
                                 (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
-                        # Mark key points
-                        cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (l_knee_x, l_knee_y), 7, (0, 255, 0), -1)
-                        cv2.circle(image, (l_ankle_x, l_ankle_y), 7, (203, 192, 255), -1)
+                    #Draw points
+                    cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (l_knee_x, l_knee_y), 7, (0, 255, 0), -1)
+                    cv2.circle(image, (l_ankle_x, l_ankle_y), 7, (203, 192, 255), -1)
 
-                        # Draw lines for visualization
-                        cv2.line(image, (l_shldr_x, l_shldr_y), (l_knee_x, l_knee_y), color, 4)
-                        cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 4)
+                    # Draw lines for visualization
+                    cv2.line(image, (l_shldr_x, l_shldr_y), (l_knee_x, l_knee_y), color, 4)
+                    cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 4)
+                   
+                except Exception as e:
+                    st.error(f"Error processing keypoints: {e}")
+            if selected_option == "Right Quad":
+                try:
+                    r_knee_x = int(lm.landmark[lmPose.RIGHT_KNEE].x * w)
+                    r_knee_y = int(lm.landmark[lmPose.RIGHT_KNEE].y * h)
+                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
+                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
+                    r_ankle_x = int(lm.landmark[lmPose.RIGHT_ANKLE].x * w)
+                    r_ankle_y = int(lm.landmark[lmPose.RIGHT_ANKLE].y * h)
+                 
+                    # Calculate for right side if right shoulder is more visible
+                    body_alignment = findAngle(r_shldr_x, r_shldr_y, r_knee_x, r_knee_y)
+                    leg_mobility = findAngle(r_knee_x, r_knee_y, r_ankle_x, r_ankle_y)
+                    cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
+
+                    if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
+                        posture_text = f"Aligned: {int(body_alignment)}" 
+                        color = (127, 255, 0)  # green
+                        check = True
                     else:
-                        cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (r_knee_x, r_knee_y), 7, (0, 255, 0), -1)
-                        cv2.circle(image, (r_ankle_x, r_ankle_y), 7, (203, 192, 255), -1)
+                        posture_text = f"Not Aligned: {int(body_alignment)}" 
+                        color = (50, 50, 255)  # red
 
-                        # Draw lines for visualization
-                        cv2.line(image, (r_shldr_x, r_shldr_y), (r_knee_x, r_knee_y), color, 4)
-                        cv2.line(image, (r_knee_x, r_knee_y), (r_ankle_x, r_ankle_y), color, 4)
+                
+                    # if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
+                    #     good_frames += 1
+                    #     bad_frames = 0
+                    #     color = (127, 233, 100)  # light green
+                    # else:
+                    #     bad_frames += 1
+                    #     good_frames = 0
+                    #     color = (50, 50, 255)  # red
+
+                    # if check == True:
+                    #     correct_tracker += 1
+                    #     pain_rater()
+
+                    # print(f"Your selected pain score is: {pain_score}")
+
+                    # # Warning message if bad posture time exceeds 3 minutes (180 seconds)
+                    # if (1 / cap.get(cv2.CAP_PROP_FPS)) * bad_frames > 180:
+                    #     st.warning("Warning: Poor posture detected for over 3 minutes!")
+
+                    # Display feedback on the frame
+                    cv2.putText(image, posture_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                    cv2.putText(image, f"Body Alignment: {int(body_alignment)} | Leg Mobiliity: {int(leg_mobility)}", 
+                                (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                    #Draw points
+                    cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (r_knee_x, r_knee_y), 7, (0, 255, 0), -1)
+                    cv2.circle(image, (r_ankle_x, r_ankle_y), 7, (203, 192, 255), -1)
+
+                    # Draw lines for visualization
+                    cv2.line(image, (r_shldr_x, r_shldr_y), (r_knee_x, r_knee_y), color, 4)
+                    cv2.line(image, (r_knee_x, r_knee_y), (r_ankle_x, r_ankle_y), color, 4)
                 except Exception as e:
                     st.error(f"Error processing keypoints: {e}")
 
@@ -276,40 +312,21 @@ if run_detection:
                         cv2.line(image, (r_hip_x, r_hip_y), (r_knee_x, r_knee_y), color, 2)
                         cv2.line(image, (r_knee_x, r_knee_y), (r_ankle_x, r_ankle_y), color, 2)
 
-                        # cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
-                        # cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
-
-                        # # Draw lines for visualization
-                        # cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
-
                 except Exception as e:  
                     st.error(f"Error processing keypoints: {e}")
 
-            if selected_option == "Arm T":
+            if selected_option == "Left Arm T":
                 # Extract relevant keypoints
                 try:
                     # Extract key points for left side (mirrored on right side if needed)
                     l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
                     l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
-                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
-                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
-
                     l_wrist_x = int(lm.landmark[lmPose.LEFT_WRIST].x * w)
                     l_wrist_y = int(lm.landmark[lmPose.LEFT_WRIST].y * h)
-                    r_wrist_x = int(lm.landmark[lmPose.RIGHT_WRIST].x * w)
-                    r_wrist_y = int(lm.landmark[lmPose.RIGHT_WRIST].y * h)
                     
                     # Calculate and display angles if keypoints are detected
-
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
-                        # Calculate for left side if left shoulder is more visible
-                        arm_mobility = findAngle(l_shldr_x, l_shldr_y, l_wrist_x, l_wrist_y)
-                        cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
-
-                    else:
-                        # Calculate for right side if right shoulder is more visible
-                        arm_mobility = findAngle(r_shldr_x, r_shldr_y, r_wrist_x, r_wrist_y)
-                        cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)                
+                    arm_mobility = findAngle(l_shldr_x, l_shldr_y, l_wrist_x, l_wrist_y)
+                    cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
 
                     # Check if the arm mobility is within the range -90 to 90 degrees
                     if 85 <= arm_mobility <= 95:
@@ -324,49 +341,97 @@ if run_detection:
                     cv2.putText(image, f"Arm Mobility: {int(arm_mobility)}",
                                 (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
                     # Mark key points
-                        cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (l_wrist_x, l_wrist_y), 7, (0, 255, 0), -1)
+                    cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (l_wrist_x, l_wrist_y), 7, (0, 255, 0), -1)
 
-                        # Draw lines for visualization
-                        cv2.line(image, (l_shldr_x, l_shldr_y), (l_wrist_x, l_wrist_y), color, 4)
+                    # Draw lines for visualization
+                    cv2.line(image, (l_shldr_x, l_shldr_y), (l_wrist_x, l_wrist_y), color, 4)
+
+                except Exception as e:  
+                    st.error(f"Error processing keypoints: {e}")
+
+            if selected_option == "Right Arm T":
+                # Extract relevant keypoints
+                try:
+                    # Extract key points for left side (mirrored on right side if needed)
+                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
+                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)                
+                    r_wrist_x = int(lm.landmark[lmPose.RIGHT_WRIST].x * w)
+                    r_wrist_y = int(lm.landmark[lmPose.RIGHT_WRIST].y * h)
+                    
+                    # Calculate and display angles if keypoints are detected
+                    arm_mobility = findAngle(r_shldr_x, r_shldr_y, r_wrist_x, r_wrist_y)
+                    cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)                
+
+                    # Check if the arm mobility is within the range -90 to 90 degrees
+                    if 85 <= arm_mobility <= 95:
+                        posture_text = "good T position"
+                        color = (0, 255, 0)
                     else:
-                        cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
+                        posture_text = "bad T position"
+                        color = (0, 0, 255)
 
-                        # Draw lines for visualization
-                        cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
+                    # Display feedback on frame
+                    cv2.putText(image, posture_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                    cv2.putText(image, f"Arm Mobility: {int(arm_mobility)}",
+                                (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+                    cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
+
+                    # Draw lines for visualization
+                    cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
 
 
                 except Exception as e:  
                     st.error(f"Error processing keypoints: {e}")
 
-            if selected_option == "Arm I":
+            if selected_option == "Left Arm I":
                 # Extract relevant keypoints
                 try:
                     # Extract key points for left side (mirrored on right side if needed)
                     l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
                     l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
-                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
-                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
-
                     l_wrist_x = int(lm.landmark[lmPose.LEFT_WRIST].x * w)
                     l_wrist_y = int(lm.landmark[lmPose.LEFT_WRIST].y * h)
+                
+                    # Calculate and display angles if keypoints are detected
+                    arm_mobility = findAngle(l_shldr_x, l_shldr_y, l_wrist_x, l_wrist_y)
+                    cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
+                   
+                    # Check if the arm mobility is within the range -90 to 90 degrees
+                    if -5 <= arm_mobility <= 5:
+                        posture_text = "good I position"
+                        color = (0, 255, 0)
+                    else:
+                        posture_text = "bad I position"
+                        color = (0, 0, 255)
+
+                    # Display feedback on frame
+                    cv2.putText(image, posture_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                    cv2.putText(image, f"Arm Mobility: {int(arm_mobility)}",
+                                (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                    
+                    cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (l_wrist_x, l_wrist_y), 7, (0, 255, 0), -1)
+
+                    cv2.line(image, (l_shldr_x, l_shldr_y), (l_wrist_x, l_wrist_y), color, 4)
+
+                except Exception as e:  
+                    st.error(f"Error processing keypoints: {e}")
+            if selected_option == "Right Arm I":
+                # Extract relevant keypoints
+                try:
+                    # Extract key points for left side (mirrored on right side if needed)
+                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
+                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
                     r_wrist_x = int(lm.landmark[lmPose.RIGHT_WRIST].x * w)
                     r_wrist_y = int(lm.landmark[lmPose.RIGHT_WRIST].y * h)
-                    
-                    # Calculate and display angles if keypoints are detected
-
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
-                        # Calculate for left side if left shoulder is more visible
-                        arm_mobility = findAngle(l_shldr_x, l_shldr_y, l_wrist_x, l_wrist_y)
-                        cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
-
-                    else:
-                        # Calculate for right side if right shoulder is more visible
-                        arm_mobility = findAngle(r_shldr_x, r_shldr_y, r_wrist_x, r_wrist_y)
-                        cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)                
+                 
+                    # Calculate for right side if right shoulder is more visible
+                    arm_mobility = findAngle(r_shldr_x, r_shldr_y, r_wrist_x, r_wrist_y)
+                    cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)                
 
                     # Check if the arm mobility is within the range -90 to 90 degrees
                     if -5 <= arm_mobility <= 5:
@@ -381,47 +446,27 @@ if run_detection:
                     cv2.putText(image, f"Arm Mobility: {int(arm_mobility)}",
                                 (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
-                    # Mark key points
-                        cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (l_wrist_x, l_wrist_y), 7, (0, 255, 0), -1)
+                   
+                    cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
 
-                        # Draw lines for visualization
-                        cv2.line(image, (l_shldr_x, l_shldr_y), (l_wrist_x, l_wrist_y), color, 4)
-                    else:
-                        cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
-
-                        # Draw lines for visualization
-                        cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
+                    cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
 
                 except Exception as e:  
                     st.error(f"Error processing keypoints: {e}")
 
-            if selected_option == "Arm Y":
+            if selected_option == "Left Arm Y":
                 # Extract relevant keypoints
                 try:
                     # Extract key points for left side (mirrored on right side if needed)
                     l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
                     l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
-                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
-                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
-
                     l_wrist_x = int(lm.landmark[lmPose.LEFT_WRIST].x * w)
                     l_wrist_y = int(lm.landmark[lmPose.LEFT_WRIST].y * h)
-                    r_wrist_x = int(lm.landmark[lmPose.RIGHT_WRIST].x * w)
-                    r_wrist_y = int(lm.landmark[lmPose.RIGHT_WRIST].y * h)
-                    
 
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
-                        # Calculate for left side if left shoulder is more visible
-                        arm_mobility = findAngle(l_shldr_x, l_shldr_y, l_wrist_x, l_wrist_y)
-                        cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
-
-                    else:
-                        # Calculate for right side if right shoulder is more visible
-                        arm_mobility = findAngle(r_shldr_x, r_shldr_y, r_wrist_x, r_wrist_y)
-                        cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)                
+                    # Calculate for left side if left shoulder is more visible
+                    arm_mobility = findAngle(l_shldr_x, l_shldr_y, l_wrist_x, l_wrist_y)
+                    cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
 
                     # Check if the arm mobility is within the range -90 to 90 degrees
                     if 40 <= arm_mobility <= 50:
@@ -436,19 +481,46 @@ if run_detection:
                     cv2.putText(image, f"Arm Mobility: {int(arm_mobility)}",
                                 (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
                     # Mark key points
-                        cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (l_wrist_x, l_wrist_y), 7, (0, 255, 0), -1)
+                    cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (l_wrist_x, l_wrist_y), 7, (0, 255, 0), -1)
 
-                        # Draw lines for visualization
-                        cv2.line(image, (l_shldr_x, l_shldr_y), (l_wrist_x, l_wrist_y), color, 4)
+                    # Draw lines for visualization
+                    cv2.line(image, (l_shldr_x, l_shldr_y), (l_wrist_x, l_wrist_y), color, 4)
+
+                except Exception as e:  
+                    st.error(f"Error processing keypoints: {e}")
+            if selected_option == "Right Arm Y":
+                # Extract relevant keypoints
+                try:
+                    # Extract key points for left side (mirrored on right side if needed)
+                    r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)
+                    r_shldr_y = int(lm.landmark[lmPose.RIGHT_SHOULDER].y * h)
+                    r_wrist_x = int(lm.landmark[lmPose.RIGHT_WRIST].x * w)
+                    r_wrist_y = int(lm.landmark[lmPose.RIGHT_WRIST].y * h)
+
+                    # Calculate for right side if right shoulder is more visible
+                    arm_mobility = findAngle(r_shldr_x, r_shldr_y, r_wrist_x, r_wrist_y)
+                    cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)                
+
+                    # Check if the arm mobility is within the range -90 to 90 degrees
+                    if 40 <= arm_mobility <= 50:
+                        posture_text = "good Y position"
+                        color = (0, 255, 0)
                     else:
-                        cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
-                        cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
+                        posture_text = "bad Y position"
+                        color = (0, 0, 255)
 
-                        # Draw lines for visualization
-                        cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
+                    # Display feedback on frame
+                    cv2.putText(image, posture_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                    cv2.putText(image, f"Arm Mobility: {int(arm_mobility)}",
+                                (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+               
+                    cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
+                    cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
+
+                    cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
 
                 except Exception as e:  
                     st.error(f"Error processing keypoints: {e}")
