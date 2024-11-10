@@ -110,7 +110,7 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 # Streamlit UI
-st.title("Ready-Set-Play")
+st.title("RecoverFit Pro")
 camera_source = st.sidebar.selectbox("Select Camera Source", ["Default Camera", "External Camera 1"])
 camera_index = 0 if camera_source == "Default Camera" else 1
 
@@ -128,8 +128,8 @@ st.write(f"You selected: {selected_option}")
 run_detection = st.checkbox("Run Exercise Detection. Uncheck when done.",value = False)
 
 # Create a button that resets the checkbox to unchecked when clicked
-if st.button("Reset Checkbox"):
-    run_detection = False  # Uncheck the box manually when the button is clicked
+# if st.button("Reset Checkbox"):
+#     run_detection = False  # Uncheck the box manually when the button is clicked
 
 if run_detection:
     good_frames = 0
