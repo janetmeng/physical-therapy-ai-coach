@@ -19,6 +19,30 @@ def findAngle3(x1, y1, x2, y2, x3, y3):
     theta = m.acos((a[0] * b[0] + a[1] * b[1]) / (m.sqrt(a[0]**2 + a[1]**2) * m.sqrt(b[0]**2 + b[1]**2)))
     return theta * (180 / m.pi)
 
+#variables
+check = False
+pain_score = 0
+pain_tracker = []
+
+#pain scorer
+def pain_rater():
+    # Slider for pain rating
+    pain_rating = st.slider("Rate your pain level:", min_value=0, max_value=5, step=1)
+
+    # display pain rating
+    st.write(f"Pain Rating: {pain_rating}")
+
+    # cpations for each description
+    if pain_rating == 0:
+        st.success("No pain")
+    elif 1 <= pain_rating <= 2:
+        st.info("Minimal to manageable pain")
+    elif 3 <= pain_rating <= 4:
+        st.warning("Moderate pain -- need a break")
+    elif pain_rating == 5:
+        st.error("Severe pain -- medical attention needed")
+    
+    pain_score = pain_rating
 
 # Initialize Mediapipe Pose
 mp_pose = mp.solutions.pose
@@ -35,12 +59,32 @@ st.subheader("Which injury area would you like to assess?")
 
 selected_option = st.selectbox(
     "Choose an exercise",
-    ["Squat", "Hamstring", "Arm T", "Arm I", "Arm Y"]
+    ["Squat", "Quads", "Arm T", "Arm I", "Arm Y"]
 )
 
 # Display the selected option
 st.write(f"You selected: {selected_option}")
 
+# #additional checkboxes:
+# if selected_option == "Quads":
+#     # Checkboxes for testing the left and right quads
+#     test_left = st.checkbox("Test Left Quad")
+#     test_right = st.checkbox("Test Right Quad")
+
+#     # Logic to ensure only one checkbox can be selected
+#     if test_left and test_right:
+#         st.error("Please select only one hamstring to test.")
+#     # Uncheck the right checkbox if left is selected
+#     test_right = False if test_left else test_right
+#     # Uncheck the left checkbox if right is selected
+#     test_left = False if test_right else test_left
+
+#     # You can add the rest of your logic for each case
+#     if test_left:
+#         st.write("You are testing the left hamstring.")
+#     elif test_right:
+#         st.write("You are testing the right hamstring.")
+    
 # Run Detection
 run_detection = st.checkbox("Run Posture Detection")
 
@@ -73,9 +117,10 @@ if run_detection:
             lmPose = mp_pose.PoseLandmark
 
             h, w = image.shape[:2]
+        
+        #QUADS
             
-            if selected_option == "Hamstring":
-            
+            if selected_option == "Quads":
                 # Extract relevant keypoints
                 try:
                     l_knee_x = int(lm.landmark[lmPose.LEFT_KNEE].x * w)
@@ -92,22 +137,22 @@ if run_detection:
                     r_ankle_y = int(lm.landmark[lmPose.RIGHT_ANKLE].y * h)
 
                     #new:
+                    
                     if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
                         # Calculate for left side if left shoulder is more visible
                         body_alignment = findAngle(l_shldr_x, l_shldr_y, l_knee_x, l_knee_y)
                         leg_mobility = findAngle(l_knee_x, l_knee_y, l_ankle_x, l_ankle_y)
                         cv2.putText(image, "Using Left Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
-
                     else:
-                        # Calculate for right side if right shoulder is more visible
+                    # Calculate for right side if right shoulder is more visible
                         body_alignment = findAngle(r_shldr_x, r_shldr_y, r_knee_x, r_knee_y)
                         leg_mobility = findAngle(r_knee_x, r_knee_y, r_ankle_x, r_ankle_y)
                         cv2.putText(image, "Using Right Side", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
 
-
                     if (body_alignment < 190 and body_alignment > 170) and leg_mobility < 50:
                         posture_text = f"Aligned: {int(body_alignment)}" 
                         color = (127, 255, 0)  # green
+                        check = True
                     else:
                         posture_text = f"Not Aligned: {int(body_alignment)}" 
                         color = (50, 50, 255)  # red
@@ -122,9 +167,15 @@ if run_detection:
                         good_frames = 0
                         color = (50, 50, 255)  # red
 
-                    # Warning message if bad posture time exceeds 3 minutes (180 seconds)
-                    if (1 / cap.get(cv2.CAP_PROP_FPS)) * bad_frames > 180:
-                        st.warning("Warning: Poor posture detected for over 3 minutes!")
+                    # if check == True:
+                    #     correct_tracker += 1
+                    #     pain_rater()
+
+                    # print(f"Your selected pain score is: {pain_score}")
+
+                    # # Warning message if bad posture time exceeds 3 minutes (180 seconds)
+                    # if (1 / cap.get(cv2.CAP_PROP_FPS)) * bad_frames > 180:
+                    #     st.warning("Warning: Poor posture detected for over 3 minutes!")
 
                     # Display feedback on the frame
                     cv2.putText(image, posture_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
@@ -150,6 +201,8 @@ if run_detection:
                         cv2.line(image, (r_knee_x, r_knee_y), (r_ankle_x, r_ankle_y), color, 4)
                 except Exception as e:
                     st.error(f"Error processing keypoints: {e}")
+
+        #SQUAT
 
             if selected_option == "Squat":
                 # Extract relevant keypoints
