@@ -31,10 +31,10 @@ camera_index = 0 if camera_source == "Default Camera" else 1
 
 #streamlit UI checkbox test:
 # Title of the app
-st.title("Which injury area would you like to assess?")
+st.subheader("Which injury area would you like to assess?")
 
 selected_option = st.selectbox(
-    "Choose a feature",
+    "Choose an exercise",
     ["Squat", "Hamstring", "Arm T", "Arm I", "Arm Y"]
 )
 
@@ -131,14 +131,23 @@ if run_detection:
                     cv2.putText(image, f"Body Alignment: {int(body_alignment)} | Leg Mobiliity: {int(leg_mobility)}", 
                                 (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-                    # Mark key points on the frame
-                    cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
-                    cv2.circle(image, (l_knee_x, l_knee_y), 7, (0, 255, 0), -1)
-                    cv2.circle(image, (l_ankle_x, l_ankle_y), 7, (203, 192, 255), -1)
+                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
+                        # Mark key points
+                        cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (0, 255, 255), -1)
+                        cv2.circle(image, (l_knee_x, l_knee_y), 7, (0, 255, 0), -1)
+                        cv2.circle(image, (l_ankle_x, l_ankle_y), 7, (203, 192, 255), -1)
 
-                    cv2.line(image, (l_shldr_x, l_shldr_y), (l_knee_x, l_knee_y), color, 4)
-                    cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 4)
+                        # Draw lines for visualization
+                        cv2.line(image, (l_shldr_x, l_shldr_y), (l_knee_x, l_knee_y), color, 4)
+                        cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 4)
+                    else:
+                        cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
+                        cv2.circle(image, (r_knee_x, r_knee_y), 7, (0, 255, 0), -1)
+                        cv2.circle(image, (r_ankle_x, r_ankle_y), 7, (203, 192, 255), -1)
 
+                        # Draw lines for visualization
+                        cv2.line(image, (r_shldr_x, r_shldr_y), (r_knee_x, r_knee_y), color, 4)
+                        cv2.line(image, (r_knee_x, r_knee_y), (r_ankle_x, r_ankle_y), color, 4)
                 except Exception as e:
                     st.error(f"Error processing keypoints: {e}")
 
@@ -190,17 +199,35 @@ if run_detection:
                     cv2.putText(image, posture_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
                     cv2.putText(image, f"Knee Angle: {int(knee_angle)} | Torso Angle: {int(torso_angle)}",
                                 (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                    
+                    if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
+                        # Mark key points
+                        cv2.circle(image, (l_hip_x, l_hip_y), 7, (0, 255, 255), -1)
+                        cv2.circle(image, (l_knee_x, l_knee_y), 7, (0, 255, 0), -1)
+                        cv2.circle(image, (l_ankle_x, l_ankle_y), 7, (255, 0, 0), -1)
+                        cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (255, 255, 0), -1)
 
-                    # Mark key points
-                    cv2.circle(image, (l_hip_x, l_hip_y), 7, (0, 255, 255), -1)
-                    cv2.circle(image, (l_knee_x, l_knee_y), 7, (0, 255, 0), -1)
-                    cv2.circle(image, (l_ankle_x, l_ankle_y), 7, (255, 0, 0), -1)
-                    cv2.circle(image, (l_shldr_x, l_shldr_y), 7, (255, 255, 0), -1)
+                         # Draw lines for visualization
+                        cv2.line(image, (l_shldr_x, l_shldr_y), (l_hip_x, l_hip_y), color, 2)
+                        cv2.line(image, (l_hip_x, l_hip_y), (l_knee_x, l_knee_y), color, 2)
+                        cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 2)
+                    else:
+                        # Mark key points
+                        cv2.circle(image, (r_hip_x, r_hip_y), 7, (0, 255, 255), -1)
+                        cv2.circle(image, (r_knee_x, r_knee_y), 7, (0, 255, 0), -1)
+                        cv2.circle(image, (r_ankle_x, r_ankle_y), 7, (255, 0, 0), -1)
+                        cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (255, 255, 0), -1)
 
-                    # Draw lines for visualization
-                    cv2.line(image, (l_shldr_x, l_shldr_y), (l_hip_x, l_hip_y), color, 2)
-                    cv2.line(image, (l_hip_x, l_hip_y), (l_knee_x, l_knee_y), color, 2)
-                    cv2.line(image, (l_knee_x, l_knee_y), (l_ankle_x, l_ankle_y), color, 2)
+                        # Draw lines for visualization
+                        cv2.line(image, (r_shldr_x, r_shldr_y), (r_hip_x, r_hip_y), color, 2)
+                        cv2.line(image, (r_hip_x, r_hip_y), (r_knee_x, r_knee_y), color, 2)
+                        cv2.line(image, (r_knee_x, r_knee_y), (r_ankle_x, r_ankle_y), color, 2)
+
+                        # cv2.circle(image, (r_shldr_x, r_shldr_y), 7, (0, 255, 255), -1)
+                        # cv2.circle(image, (r_wrist_x, r_wrist_y), 7, (0, 255, 0), -1)
+
+                        # # Draw lines for visualization
+                        # cv2.line(image, (r_shldr_x, r_shldr_y), (r_wrist_x, r_wrist_y), color, 4)
 
                 except Exception as e:  
                     st.error(f"Error processing keypoints: {e}")
@@ -332,7 +359,6 @@ if run_detection:
                     r_wrist_x = int(lm.landmark[lmPose.RIGHT_WRIST].x * w)
                     r_wrist_y = int(lm.landmark[lmPose.RIGHT_WRIST].y * h)
                     
-                    # Calculate and display angles if keypoints are detected
 
                     if lm.landmark[lmPose.LEFT_SHOULDER].visibility > lm.landmark[lmPose.RIGHT_SHOULDER].visibility:
                         # Calculate for left side if left shoulder is more visible
