@@ -125,7 +125,7 @@ selected_option = st.selectbox(
 st.write(f"You selected: {selected_option}")
     
 # Run Detection, initally false
-run_detection = st.checkbox("Run Exercise Detection. Uncheck when done.",value = False)
+run_detection = st.checkbox("Run Exercise Detection",value = False)
 
 # Create a button that resets the checkbox to unchecked when clicked
 # if st.button("Reset Checkbox"):
@@ -328,10 +328,10 @@ if run_detection:
         frame_window.image(image, channels="BGR")
 
     cap.release()
-else:
-    exercises.append(selected_option)
-    done_tracker.append(done_with_exercise)
-    length = len(exercises)
-    if st.button("Generate Report"):
-        for i in range(length):
-            st.write(f"{i}: Exercise: {exercises[i]}, Done: {done_tracker[i]}")
+# else:
+#     exercises.append(selected_option)
+#     done_tracker.append(done_with_exercise)
+#     length = len(exercises)
+#     if st.button("Generate Report"):
+#         for i in range(length):
+#             st.write(f"{i}: Exercise: {exercises[i]}, Done: {done_tracker[i]}")
